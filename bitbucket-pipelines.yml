@@ -1,0 +1,21 @@
+
+image: alpine:latest
+
+definitions:
+  buildImage: &buildImage
+    name: Build and push Docker image
+    services:
+      - docker
+    script:
+        - export IMAGE_NAME=tudorfil9/junit_kata_v1:latest
+        - docker build -t $IMAGE_NAME .
+        - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
+        - docker push $IMAGE_NAME
+
+
+
+pipelines:
+  branches:
+    master:
+      - step: *buildImage
+      # - step: *buildApp
