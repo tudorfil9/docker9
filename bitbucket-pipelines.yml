@@ -10,11 +10,65 @@ pipelines:
           services:
             - docker
           script:
+            - rm -rf target/
             - export IMAGE_NAME=tudorfil9/junit_kata_v1
             - git clone https://tudorfil8@bitbucket.org/tudorfil8/docker.git
-            - docker build -t $IMAGE_NAME:develop .
+            - cd App
+            - ls target/surefire-reports
+            - mvn clean
+
+      - step:
+          name: jUnit Tests
+          images: tudorfil9/junit_kata_v1:develop
+          caches:
+          # - docker
+          - maven
+          services:
+            - docker
+          script:
+            - export BUILD=$BITBUCKET_BUILD_NUMBER
+            - cd App
+            - ls target/
+            - mvn test
+            - ls target/
+            # - cd App/target/surefire-reports
+            - ls
+            - echo $BUILD
+          artifacts:
+            - "/opt/atlassian/pipelines/agent/build/App/target/surefire-reports/TEST-com.tudorfil.examples.TestMagicBuilder.xml"
+
+      - step:
+          name: PKG Build
+          images: tudorfil9/junit_kata_v1:develop
+          # caches:
+          # - docker
+          # - maven
+          services:
+            - docker
+          script:
+            - cd App
+            - mvn package
+            - ls target/
+          artifacts:
+            - "/opt/atlassian/pipelines/agent/build/App/target/maven-unit-test.tar.gz"
+            - "/project/production/App/target/maven-unit-test.tar.gz"
+            - "maven-unit-test.tar.gz"
+
+    production:
+      - step:
+          name: Docker + GIT
+          images: tudorfil9/junit_kata_v1:production
+          # caches:
+          #   - docker
+          #   - maven
+          services:
+            - docker
+          script:
+            - export IMAGE_NAME=tudorfil9/junit_kata_v1
+            - git clone https://tudorfil8@bitbucket.org/tudorfil8/docker.git
+            - docker build -t $IMAGE_NAME:production .
             - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
-            - docker push $IMAGE_NAME:develop
+            - docker push $IMAGE_NAME:production
             - cd App
             - ls target/surefire-reports
             - rm -rf target/
