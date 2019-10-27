@@ -14,39 +14,38 @@ pipelines:
             - export IMAGE_NAME=tudorfil9/junit_kata_v1
             - git clone https://tudorfil8@bitbucket.org/tudorfil8/docker.git
             - cd App
-            - ls target/surefire-reports
-            - mvn clean
+            - ls
 
       - step:
           name: jUnit Tests
           images: tudorfil9/junit_kata_v1:develop
           caches:
-          # - docker
-          - maven
+            - docker
+            - maven
           services:
             - docker
           script:
             - export BUILD=$BITBUCKET_BUILD_NUMBER
             - cd App
-            - ls target/
+            - rm -rf target/
             - mvn test
             - ls target/
-            # - cd App/target/surefire-reports
-            - ls
-            - echo $BUILD
           artifacts:
-            - "/opt/atlassian/pipelines/agent/build/App/target/surefire-reports/TEST-com.tudorfil.examples.TestMagicBuilder.xml"
+            - "/opt/atlassian/pipelines/agent/build/App/target/maven-unit-test.tar.gz"
+            - "/project/production/App/target/maven-unit-test.tar.gz"
+            - "maven-unit-test.tar.gz"
 
       - step:
           name: PKG Build
           images: tudorfil9/junit_kata_v1:develop
-          # caches:
-          # - docker
-          # - maven
+          caches:
+            - docker
+            - maven
           services:
             - docker
           script:
             - cd App
+            - rm -rf target/
             - mvn package
             - ls target/
           artifacts:
@@ -64,52 +63,54 @@ pipelines:
           services:
             - docker
           script:
+            - cd App
+            - rm -rf target/
+            - cd ../
             - export IMAGE_NAME=tudorfil9/junit_kata_v1
             - git clone https://tudorfil8@bitbucket.org/tudorfil8/docker.git
             - docker build -t $IMAGE_NAME:production .
             - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
             - docker push $IMAGE_NAME:production
-            - cd App
-            - ls target/surefire-reports
-            - rm -rf target/
-            - mvn clean
 
       - step:
           name: jUnit Tests
           images: tudorfil9/junit_kata_v1:stable
           caches:
-          # - docker
-          - maven
+            - docker
+            - maven
           services:
             - docker
           script:
             - export BUILD=$BITBUCKET_BUILD_NUMBER
             - cd App
+            - rm -rf target/
+            - mvn clean test
             - ls target/
-            - mvn test
-            - ls target/
-            # - cd App/target/surefire-reports
-            - ls
-            - echo $BUILD
           artifacts:
-            - "/opt/atlassian/pipelines/agent/build/App/target/surefire-reports/TEST-com.tudorfil.examples.TestMagicBuilder.xml"
+            - "/opt/atlassian/pipelines/agent/build/App/target/maven-unit-test.tar.gz"
+            - "/project/production/App/target/maven-unit-test.tar.gz"
+            - "*maven-unit-test.tar.gz"
+            - "*.tar.gz"
 
       - step:
           name: PKG Build
           images: tudorfil9/junit_kata_v1:stable
-          # caches:
-          # - docker
-          # - maven
+          caches:
+            - docker
+            - maven
           services:
             - docker
           script:
             - cd App
+            - rm -rf target/
+            - git clone https://tudorfil8@bitbucket.org/tudorfil8/docker.git
             - mvn package
             - ls target/
           artifacts:
             - "/opt/atlassian/pipelines/agent/build/App/target/maven-unit-test.tar.gz"
             - "/project/production/App/target/maven-unit-test.tar.gz"
-            - "maven-unit-test.tar.gz"
+            - "*maven-unit-test.tar.gz"
+            - "*.tar.gz"
 
 
 
